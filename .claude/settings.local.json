@@ -127,7 +127,17 @@
       "Bash(gh auth *)",
       "Bash(gh --version)",
       "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(2188,16612,16452,16240,12116,19636,18628,17796,18812,13152,20848,20704\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
-      "Bash(pnpm --filter @birvo/channel-sdk test)"
+      "Bash(pnpm --filter @birvo/channel-sdk test)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4000/v1/health/live)",
+      "Bash(curl -s -o /dev/null -w \"web: %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -w \"api: %{http_code}\\\\n\" http://localhost:4000/v1/health/live)",
+      "Bash(node dist/main.js)",
+      "Bash(npx dotenv *)",
+      "Bash(pnpm --filter @birvo/api build)",
+      "Bash(curl -s http://localhost:4000/v1/health/live)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(21212,4732,10064,10588,10272,5044,5276,22172,2448,18196,12576\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
     ]
   }
 }
