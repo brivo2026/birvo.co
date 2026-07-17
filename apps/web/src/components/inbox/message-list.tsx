@@ -32,7 +32,7 @@ export function MessageList({ conversationId }: { conversationId: string }) {
   }
 
   return (
-    <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+    <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4" data-testid="message-thread">
       {data?.items.length === 0 && (
         <p className="mt-10 text-center text-sm text-slate-400">Aún no hay mensajes en esta conversación.</p>
       )}

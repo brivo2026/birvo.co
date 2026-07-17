@@ -40,22 +40,25 @@ test.describe('Bandeja unificada de BIRVO', () => {
     await expect(page.getByRole('heading', { name: 'Bandeja' })).toBeVisible();
 
     // 3. Simular un mensaje entrante desde /dev/sandbox.
+    const clientName = `Cliente E2E ${Date.now()}`;
     await page.goto('/dev/sandbox');
-    await page.getByPlaceholder('Cliente de prueba').fill(`Cliente E2E ${Date.now()}`);
+    await page.getByPlaceholder('Cliente de prueba').fill(clientName);
     await page.getByRole('button', { name: 'Enviar mensaje simulado' }).click();
     await expect(page.locator('pre')).toContainText('queued');
 
     // 4. Verlo en tiempo real dentro de la bandeja (sin recargar).
     await page.goto('/inbox');
-    await expect(page.getByText(/Cliente E2E/).first()).toBeVisible({ timeout: 10_000 });
+    const conversationLink = page.getByRole('link', { name: new RegExp(clientName) });
+    await expect(conversationLink).toBeVisible({ timeout: 10_000 });
 
     // 5. Abrir la conversación y responder.
-    await page.getByText(/Cliente E2E/).first().click();
+    await conversationLink.click();
     await expect(page).toHaveURL(/\/inbox\/.+/);
+    const replyText = `¡Hola! Gracias por escribir a BIRVO (${Date.now()}).`;
     const composer = page.getByPlaceholder('Escribe una respuesta…');
-    await composer.fill('¡Hola! Gracias por escribir a BIRVO.');
+    await composer.fill(replyText);
     await composer.press('Enter');
-    await expect(page.getByText('¡Hola! Gracias por escribir a BIRVO.')).toBeVisible();
+    await expect(page.getByTestId('message-thread').getByText(replyText)).toBeVisible();
 
     // 6. Asignar la conversación al agente actual.
     const assignSelect = page.locator('select').filter({ hasText: 'Sin asignar' }).first();
@@ -64,8 +67,9 @@ test.describe('Bandeja unificada de BIRVO', () => {
     }
 
     // 7. Cerrar la conversación.
-    await page.locator('select').filter({ hasText: 'Abierta' }).first().selectOption('closed');
-    await expect(page.getByText('Cerrada')).toBeVisible();
+    const statusSelect = page.locator('select').filter({ hasText: 'Abierta' }).first();
+    await statusSelect.selectOption('closed');
+    await expect(statusSelect).toHaveValue('closed');
   });
 
   test('la API rechaza credenciales inválidas', async ({ request }) => {
