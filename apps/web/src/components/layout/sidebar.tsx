@@ -12,6 +12,7 @@ import {
   Settings,
   FlaskConical,
   LogOut,
+  X,
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils';
 import type { SessionUser } from '@birvo/contracts';
 import { Avatar } from '@/components/ui/avatar';
 import { Logo } from '@/components/ui/logo';
+import { useUiStore } from '@/store/ui-store';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
@@ -35,6 +37,8 @@ export function Sidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const toggleSidebar = useUiStore((s) => s.toggleSidebar);
 
   const logoutMutation = useMutation({
     mutationFn: () => api.post('/auth/logout'),
@@ -45,19 +49,45 @@ export function Sidebar({ user }: { user: SessionUser }) {
   });
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-slate-100 bg-white">
-      <div className="flex items-center gap-2 px-6 py-6">
-        <Logo />
-        <span className="font-heading text-xl font-semibold text-birvo-blue">BIRVO</span>
-      </div>
+    <>
+      {!sidebarCollapsed && (
+        <button
+          aria-label="Cerrar menú"
+          onClick={toggleSidebar}
+          className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
+        />
+      )}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 flex h-screen w-64 shrink-0 flex-col border-r border-slate-100 bg-white transition-transform duration-200 ease-in-out',
+          'md:static md:z-auto md:translate-x-0',
+          sidebarCollapsed ? '-translate-x-full' : 'translate-x-0',
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 px-6 py-6">
+          <div className="flex items-center gap-2">
+            <Logo />
+            <span className="font-heading text-xl font-semibold text-birvo-blue">BIRVO</span>
+          </div>
+          <button
+            onClick={toggleSidebar}
+            aria-label="Cerrar menú"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 md:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-      <nav className="flex-1 space-y-1 px-3">
+        <nav className="flex-1 space-y-1 px-3">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname?.startsWith(`${href}/`);
           return (
             <Link
               key={href}
               href={href}
+              onClick={() => {
+                if (!sidebarCollapsed) toggleSidebar();
+              }}
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                 active ? 'bg-birvo-purple/10 text-birvo-purple' : 'text-slate-600 hover:bg-slate-50',
@@ -101,6 +131,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

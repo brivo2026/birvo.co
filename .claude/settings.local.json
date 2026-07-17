@@ -107,7 +107,13 @@
       "Bash(powershell -NoProfile -Command \"\\(Test-NetConnection -ComputerName localhost -Port 4000\\).TcpTestSucceeded\")",
       "Bash(npx tsc *)",
       "Bash(npx eslint *)",
-      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(22512,21212,17480,18488,12388,18936,21928,18668,11744,7276,18704\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(22512,21212,17480,18488,12388,18936,21928,18668,11744,7276,18704\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(7368,13736,6216,9408,13616,17384,13684,13916,21980,3112,20640,18772\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(powershell -NoProfile -Command \"\\(Test-NetConnection -ComputerName localhost -Port 3000\\).TcpTestSucceeded\")",
+      "Bash(curl -s http://localhost:3000/inbox)",
+      "Bash(curl -s http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/inbox)",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(13432,16232,3436,22124,14124,14580,2276,20136,8904,5968,11904,8248\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
     ]
   }
 }

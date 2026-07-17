@@ -9,7 +9,7 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  sidebarCollapsed: false,
+  sidebarCollapsed: true,
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   activeConversationId: null,
   setActiveConversationId: (id) => set({ activeConversationId: id }),
