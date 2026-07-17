@@ -91,7 +91,9 @@
       "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 5432 | Select-Object TcpTestSucceeded\")",
       "Bash(powershell -NoProfile -Command \"Get-Process redis-server -ErrorAction SilentlyContinue | Select-Object Id,ProcessName\")",
       "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 6379 | Select-Object TcpTestSucceeded\")",
-      "Bash(PGPASSWORD=birvo_dev_password powershell -NoProfile -Command '$env:PGPASSWORD='\\\\''birvo_dev_password'\\\\''; & '\\\\''psql'\\\\'' -U birvo -d birvo -h localhost -c '\\\\''select count\\(*\\) from \"Organization\"; select count\\(*\\) from \"Contact\"; select email from \"User\";'\\\\''')"
+      "Bash(PGPASSWORD=birvo_dev_password powershell -NoProfile -Command '$env:PGPASSWORD='\\\\''birvo_dev_password'\\\\''; & '\\\\''psql'\\\\'' -U birvo -d birvo -h localhost -c '\\\\''select count\\(*\\) from \"Organization\"; select count\\(*\\) from \"Contact\"; select email from \"User\";'\\\\''')",
+      "Bash(pnpm test *)",
+      "Bash(pnpm build *)"
     ]
   }
 }
