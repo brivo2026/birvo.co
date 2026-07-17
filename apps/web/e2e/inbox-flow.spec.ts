@@ -7,8 +7,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
  *
  * Requiere el stack completo corriendo (`pnpm dev` con Postgres/Redis
  * disponibles y la base de datos sembrada con `pnpm db:seed`) — ver README
- * para instrucciones. No se ejecutó en el sandbox de construcción por la
- * restricción de red documentada en ADR-0007.
+ * para instrucciones.
  */
 
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:4000';
