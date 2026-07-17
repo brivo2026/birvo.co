@@ -123,7 +123,11 @@
       "Bash(curl -s -o /dev/null -w \"dashboard: %{http_code}\\\\n\" http://localhost:3000/dashboard)",
       "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(18848,9584,8532,6592,9600,9236,19208,13484,10220,8852,1524,15820,9136\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
       "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(8480,9088,5008,9184,8544,21732,21000,880,18348,18992,14612,14584\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
-      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(9600,6844,10068,20892,15224,16012,9140,21508,15172,7924,20732,21544\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(9600,6844,10068,20892,15224,16012,9140,21508,15172,7924,20732,21544\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(gh auth *)",
+      "Bash(gh --version)",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(2188,16612,16452,16240,12116,19636,18628,17796,18812,13152,20848,20704\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(pnpm --filter @birvo/channel-sdk test)"
     ]
   }
 }

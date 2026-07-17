@@ -7,6 +7,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyRateLimit from '@fastify/rate-limit';
+import type { FastifyRequest } from 'fastify';
 import { AppModule } from './app.module';
 import { loadEnv } from '@birvo/config';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -30,6 +31,26 @@ async function bootstrap() {
   await app.register(fastifyCookie, {
     secret: env.SESSION_JWT_SECRET,
   });
+
+  // Conserva el body crudo (antes de parsear JSON) para poder verificar la
+  // firma HMAC de los webhooks de Meta, que se calcula sobre los bytes
+  // exactos recibidos y no sobre una re-serialización del JSON parseado.
+  app.getHttpAdapter().getInstance().addContentTypeParser(
+    'application/json',
+    { parseAs: 'buffer' },
+    (request: FastifyRequest, body: Buffer, done: (err: Error | null, result?: unknown) => void) => {
+      (request as FastifyRequest & { rawBody?: Buffer }).rawBody = body;
+      if (body.length === 0) {
+        done(null, undefined);
+        return;
+      }
+      try {
+        done(null, JSON.parse(body.toString('utf8')));
+      } catch (error) {
+        done(error as Error, undefined);
+      }
+    },
+  );
 
   await app.register(fastifyMultipart, {
     limits: { fileSize: 25 * 1024 * 1024 }, // 25MB máximo por adjunto
@@ -69,7 +90,10 @@ async function bootstrap() {
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, swaggerDocument);
 
-  await app.listen(env.API_PORT, env.API_HOST);
+  // Proveedores como Render asignan el puerto vía la variable de entorno
+  // PORT (fuera del esquema propio de BIRVO); se usa esa si está presente.
+  const port = process.env.PORT ? Number(process.env.PORT) : env.API_PORT;
+  await app.listen(port, env.API_HOST);
   logger.log(`🚀 BIRVO API escuchando en ${env.API_BASE_URL} (docs en /docs)`);
 }
 

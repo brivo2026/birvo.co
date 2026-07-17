@@ -1,17 +1,26 @@
-import { Body, Controller, Get, Headers, Post, Query, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Inject, Param, Post, Query, Req, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { randomUUID } from 'node:crypto';
-import type { ChannelProvider } from '@birvo/contracts';
+import type { FastifyRequest } from 'fastify';
+import { ChannelProvider, type ChannelProvider as ChannelProviderType } from '@birvo/contracts';
 import { Public } from '../../common/decorators/public.decorator';
 import { ChannelRegistryFactory } from '../channels/channel-registry.provider';
 import { WebhookIngestionService } from './webhook-ingestion.service';
 import { BIRVO_ENV, type BirvoEnv } from '../../config/config.module';
-import { Inject } from '@nestjs/common';
+
+const REAL_PROVIDERS = new Set<string>([ChannelProvider.WHATSAPP, ChannelProvider.INSTAGRAM, ChannelProvider.MESSENGER]);
+
+function parseProvider(provider: string): ChannelProviderType {
+  if (!REAL_PROVIDERS.has(provider)) {
+    throw new BadRequestException(`Proveedor de webhook desconocido: ${provider}`);
+  }
+  return provider as ChannelProviderType;
+}
 
 /**
- * Endpoint público (sin sesión) para proveedores reales (Meta). Queda
- * estructuralmente completo (verificación de reto + firma) pero inerte sin
- * credenciales configuradas — ver ADR-0004 y MetaChannelAdapter.
+ * Endpoint público (sin sesión) para proveedores reales (Meta). El envío y
+ * la normalización real están implementados en `MetaChannelAdapter` — ver
+ * docs/integrations/meta.md para qué falta verificar contra tráfico real.
  */
 @ApiTags('webhooks')
 @Controller({ path: 'webhooks', version: '1' })
@@ -25,7 +34,13 @@ export class WebhooksController {
   /** Verificación de reto usada por Meta al configurar el webhook (hub.challenge). */
   @Get(':provider')
   @Public()
-  verify(@Query('hub.mode') mode: string, @Query('hub.verify_token') token: string, @Query('hub.challenge') challenge: string) {
+  verify(
+    @Param('provider') provider: string,
+    @Query('hub.mode') mode: string,
+    @Query('hub.verify_token') token: string,
+    @Query('hub.challenge') challenge: string,
+  ) {
+    parseProvider(provider);
     if (mode === 'subscribe' && token === this.env.META_WEBHOOK_VERIFY_TOKEN && this.env.META_WEBHOOK_VERIFY_TOKEN) {
       return challenge;
     }
@@ -35,14 +50,16 @@ export class WebhooksController {
   @Post(':provider')
   @Public()
   async receive(
+    @Param('provider') providerParam: string,
     @Body() body: unknown,
     @Headers('x-hub-signature-256') signatureHeader: string | undefined,
+    @Req() request: FastifyRequest & { rawBody?: Buffer },
   ) {
-    // NOTA: en un despliegue real, este endpoint debe usar el rawBody exacto
-    // (no el JSON re-serializado) para verificar la firma HMAC. Se documenta
-    // aquí como referencia; ver ADR-0004 para el alcance del MVP.
-    const provider = 'whatsapp' as ChannelProvider; // TODO: derivar de :provider param con validación de enum
-    const adapter = this.registry.registry.get(provider) as { isEnabled?: () => boolean };
+    const provider = parseProvider(providerParam);
+    const adapter = this.registry.registry.get(provider) as {
+      isEnabled?: () => boolean;
+      verifyWebhookSignature: (input: { rawBody: string | Buffer; signatureHeader: string | undefined; secret: string }) => Promise<boolean>;
+    };
 
     if (!adapter.isEnabled?.()) {
       throw new ServiceUnavailableException(
@@ -50,12 +67,19 @@ export class WebhooksController {
       );
     }
 
+    const rawBody = request.rawBody ?? Buffer.from(JSON.stringify(body));
+    const signatureValid = await adapter.verifyWebhookSignature({
+      rawBody,
+      signatureHeader,
+      secret: this.env.META_APP_SECRET,
+    });
+
     const result = await this.ingestion.ingest({
       provider,
       organizationId: null,
-      idempotencyKey: `meta-${randomUUID()}`,
+      idempotencyKey: `meta-${provider}-${randomUUID()}`,
       payload: body,
-      signatureValid: Boolean(signatureHeader),
+      signatureValid,
     });
 
     return { received: true, ...result };

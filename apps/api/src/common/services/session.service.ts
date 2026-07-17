@@ -36,10 +36,17 @@ export class SessionService {
   }
 
   cookieOptions() {
+    // En producción, web y api suelen vivir en dominios distintos (p. ej.
+    // subdominios *.onrender.com, tratados como sitios distintos), por lo
+    // que la cookie de sesión necesita SameSite=None + Secure para viajar en
+    // las peticiones fetch con credentials:'include'. En desarrollo local
+    // ambos corren en localhost con puertos distintos pero el mismo sitio,
+    // donde 'lax' es suficiente y no requiere HTTPS.
+    const isProduction = this.env.NODE_ENV === 'production';
     return {
       httpOnly: true,
-      sameSite: 'lax' as const,
-      secure: this.env.NODE_ENV === 'production',
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+      secure: isProduction,
       path: '/',
       maxAge: this.env.SESSION_TTL_HOURS * 60 * 60,
     };
