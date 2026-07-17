@@ -5,8 +5,12 @@ services:
     plan: free
     region: oregon
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo run build --filter=@birvo/api...
-    startCommand: pnpm --filter @birvo/api start
-    preDeployCommand: pnpm --filter @birvo/database migrate
+    # preDeployCommand no está soportado en el plan free: la migración se
+    # corre como parte del arranque en su lugar. `prisma migrate deploy` es
+    # idempotente (solo aplica migraciones pendientes), así que es seguro
+    # ejecutarla en cada arranque, incluido cada vez que el servicio
+    # despierta tras dormirse por inactividad.
+    startCommand: pnpm --filter @birvo/database migrate && pnpm --filter @birvo/api start
     healthCheckPath: /v1/health/live
     envVars:
       - key: NODE_ENV
