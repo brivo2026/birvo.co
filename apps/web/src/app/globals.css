@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --birvo-blue: #1e3a8a;
+  --birvo-purple: #7c3aed;
+  --birvo-white: #ffffff;
+  --birvo-gray: #f5f7fb;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--birvo-gray);
+  color: #0f172a;
+}
+
+* {
+  border-color: rgb(226 232 240);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(124, 58, 237, 0.25);
+  border-radius: 999px;
+}

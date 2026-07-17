@@ -1,0 +1,44 @@
+{
+  "name": "@birvo/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "clean": "rm -rf .next",
+    "lint": "eslint \"**/*.{ts,tsx}\" --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"(sin pruebas unitarias de componentes en el MVP; ver apps/web/e2e)\" && exit 0",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@birvo/contracts": "workspace:*",
+    "@birvo/ui": "workspace:*",
+    "@tanstack/react-query": "^5.62.11",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.469.0",
+    "next": "^16.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "@hookform/resolvers": "^3.9.1",
+    "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.1",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@birvo/eslint-config": "workspace:*",
+    "@birvo/typescript-config": "workspace:*",
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  }
+}

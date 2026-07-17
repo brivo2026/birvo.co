@@ -1,0 +1,11 @@
+{
+  "extends": "@birvo/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": "src",
+    "declaration": false,
+    "incremental": false
+  },
+  "include": ["src"]
+}

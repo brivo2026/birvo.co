@@ -1,0 +1,642 @@
+// BIRVO — Esquema de datos principal (PostgreSQL 18 + Prisma ORM)
+// Convenciones:
+//  - `id` es CUID interno usado como clave primaria (rendimiento de índice).
+//  - `publicId` es UUID expuesto en la API pública (nunca se expone `id`).
+//  - Toda entidad perteneciente a una organización incluye `organizationId`
+//    y un índice compuesto que lo antepone, para aislamiento multiempresa.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Organización, usuarios, membresías y roles
+// ---------------------------------------------------------------------------
+
+enum OrganizationStatus {
+  active
+  suspended
+  trial
+}
+
+model Organization {
+  id        String             @id @default(cuid())
+  publicId  String             @unique @default(uuid())
+  name      String
+  slug      String             @unique
+  status    OrganizationStatus @default(trial)
+  timezone  String             @default("America/Bogota")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  memberships       Membership[]
+  roles             Role[]
+  channelAccounts   ChannelAccount[]
+  contacts          Contact[]
+  conversations     Conversation[]
+  messages          Message[]
+  attachments       Attachment[]
+  tags              Tag[]
+  automations       Automation[]
+  aiConfiguration   AiConfiguration?
+  aiExecutions      AiExecution[]
+  webhookEvents     WebhookEvent[]
+  idempotencyKeys   IdempotencyKey[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  internalNotes     InternalNote[]
+  automationRuns    AutomationRun[]
+
+  @@index([slug])
+}
+
+enum UserStatus {
+  active
+  invited
+  disabled
+}
+
+model User {
+  id           String     @id @default(cuid())
+  publicId     String     @unique @default(uuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  avatarUrl    String?
+  status       UserStatus @default(active)
+  sessionVersion Int      @default(0)
+  failedLoginAttempts Int @default(0)
+  lockedUntil  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships       Membership[]
+  sentMessages      Message[]        @relation("MessageSenderUser")
+  assignedConversations Conversation[] @relation("ConversationAssignee")
+  internalNotes     InternalNote[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum MembershipStatus {
+  active
+  invited
+  suspended
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  publicId       String           @unique @default(uuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId         String
+  role           Role             @relation(fields: [roleId], references: [id])
+  status         MembershipStatus @default(active)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Role {
+  id             String   @id @default(cuid())
+  publicId       String   @unique @default(uuid())
+  organizationId String? // null = rol de sistema disponible para todas las orgs
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  permissions    String[] // valores de Permission (packages/contracts)
+  isSystem       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  memberships Membership[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+// ---------------------------------------------------------------------------
+// Canales
+// ---------------------------------------------------------------------------
+
+enum ChannelProviderType {
+  sandbox
+  whatsapp
+  instagram
+  messenger
+}
+
+enum ChannelAccountStatus {
+  active
+  disabled
+  error
+  pending
+}
+
+model ChannelAccount {
+  id                    String                @id @default(cuid())
+  publicId              String                @unique @default(uuid())
+  organizationId        String
+  organization          Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider              ChannelProviderType
+  externalAccountId     String
+  displayName           String
+  status                ChannelAccountStatus  @default(pending)
+  encryptedCredentials  String? // AES-256-GCM, nunca texto plano
+  metadata              Json                  @default("{}")
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  contactIdentities ContactIdentity[]
+  conversations     Conversation[]
+
+  @@unique([organizationId, provider, externalAccountId])
+  @@index([organizationId])
+}
+
+// ---------------------------------------------------------------------------
+// Contactos
+// ---------------------------------------------------------------------------
+
+model Contact {
+  id             String       @id @default(cuid())
+  publicId       String       @unique @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  email          String?
+  phone          String?
+  avatarUrl      String?
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  identities    ContactIdentity[]
+  conversations Conversation[]
+
+  @@index([organizationId])
+  @@index([organizationId, name])
+}
+
+model ContactIdentity {
+  id               String         @id @default(cuid())
+  publicId         String         @unique @default(uuid())
+  contactId        String
+  contact          Contact        @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  channelAccountId String
+  channelAccount   ChannelAccount @relation(fields: [channelAccountId], references: [id], onDelete: Cascade)
+  provider         ChannelProviderType
+  externalUserId   String
+  username         String?
+  metadata         Json           @default("{}")
+  createdAt        DateTime       @default(now())
+
+  @@unique([channelAccountId, externalUserId])
+  @@index([contactId])
+}
+
+// ---------------------------------------------------------------------------
+// Conversaciones y mensajes
+// ---------------------------------------------------------------------------
+
+enum ConversationStatus {
+  open
+  pending
+  resolved
+  closed
+  requires_human
+}
+
+enum ConversationPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum AiMode {
+  off
+  suggestion
+  automatic
+}
+
+model Conversation {
+  id               String               @id @default(cuid())
+  publicId         String               @unique @default(uuid())
+  organizationId   String
+  organization     Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contactId        String
+  contact          Contact              @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  channelAccountId String
+  channelAccount   ChannelAccount       @relation(fields: [channelAccountId], references: [id], onDelete: Cascade)
+  assignedUserId   String?
+  assignedUser     User?                @relation("ConversationAssignee", fields: [assignedUserId], references: [id])
+  status           ConversationStatus   @default(open)
+  priority         ConversationPriority @default(normal)
+  lastMessageAt    DateTime             @default(now())
+  unreadCount      Int                  @default(0)
+  aiMode           AiMode               @default(off)
+  automaticReplyCount Int               @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  messages       Message[]
+  tags           ConversationTag[]
+  internalNotes  InternalNote[]
+  automationRuns AutomationRun[]
+  aiExecutions   AiExecution[]
+  notifications  Notification[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, assignedUserId])
+  @@index([organizationId, lastMessageAt])
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum MessageSenderType {
+  contact
+  user
+  ai
+  system
+}
+
+enum MessageType {
+  text
+  image
+  audio
+  video
+  file
+  system
+}
+
+enum MessageStatus {
+  pending
+  queued
+  sent
+  delivered
+  read
+  failed
+}
+
+model Message {
+  id               String            @id @default(cuid())
+  publicId         String            @unique @default(uuid())
+  organizationId   String
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId   String
+  conversation     Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction        MessageDirection
+  senderType       MessageSenderType
+  senderUserId     String?
+  senderUser       User?             @relation("MessageSenderUser", fields: [senderUserId], references: [id])
+  externalMessageId String?
+  messageType      MessageType       @default(text)
+  content          String
+  status           MessageStatus     @default(pending)
+  failureReason    String?
+  replyToMessageId String?
+  replyToMessage   Message?          @relation("MessageReply", fields: [replyToMessageId], references: [id])
+  replies          Message[]         @relation("MessageReply")
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  readAt           DateTime?
+  createdAt        DateTime          @default(now())
+
+  attachments Attachment[]
+
+  @@unique([organizationId, externalMessageId])
+  @@index([organizationId])
+  @@index([conversationId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Adjuntos y transcripción
+// ---------------------------------------------------------------------------
+
+enum AttachmentType {
+  image
+  audio
+  video
+  file
+}
+
+enum TranscriptionStatus {
+  none
+  pending
+  processing
+  completed
+  failed
+}
+
+model Attachment {
+  id                  String               @id @default(cuid())
+  publicId            String               @unique @default(uuid())
+  organizationId      String
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messageId           String
+  message              Message              @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  type                AttachmentType
+  filename            String
+  mimeType            String
+  size                Int
+  storageKey          String
+  duration            Int?
+  transcriptionStatus TranscriptionStatus  @default(none)
+  transcriptionText   String?
+  transcriptionLang   String?
+  transcriptionProvider String?
+  transcriptionAttempts Int                @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([organizationId])
+  @@index([messageId])
+}
+
+// ---------------------------------------------------------------------------
+// Etiquetas y notas
+// ---------------------------------------------------------------------------
+
+model Tag {
+  id             String       @id @default(cuid())
+  publicId       String       @unique @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  color          String       @default("#7C3AED")
+  createdAt      DateTime     @default(now())
+
+  conversations ConversationTag[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model ConversationTag {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tagId          String
+  tag            Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([conversationId, tagId])
+  @@index([tagId])
+}
+
+model InternalNote {
+  id             String       @id @default(cuid())
+  publicId       String       @unique @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorUserId   String
+  authorUser     User         @relation(fields: [authorUserId], references: [id])
+  body           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([organizationId])
+}
+
+// ---------------------------------------------------------------------------
+// Automatizaciones
+// ---------------------------------------------------------------------------
+
+enum AutomationTrigger {
+  inactivity_timeout
+  keyword_match
+  conversation_created
+}
+
+model Automation {
+  id             String            @id @default(cuid())
+  publicId       String            @unique @default(uuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  trigger        AutomationTrigger
+  config         Json              @default("{}")
+  isActive       Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  runs AutomationRun[]
+
+  @@index([organizationId])
+}
+
+enum AutomationRunStatus {
+  scheduled
+  running
+  completed
+  cancelled
+  failed
+}
+
+model AutomationRun {
+  id             String              @id @default(cuid())
+  publicId       String              @unique @default(uuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  automationId   String?
+  automation     Automation?         @relation(fields: [automationId], references: [id])
+  conversationId String
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  status         AutomationRunStatus @default(scheduled)
+  scheduledFor   DateTime?
+  bullJobId      String?
+  result         Json?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([conversationId])
+  @@index([bullJobId])
+}
+
+// ---------------------------------------------------------------------------
+// IA
+// ---------------------------------------------------------------------------
+
+model AiConfiguration {
+  id                     String       @id @default(cuid())
+  organizationId         String       @unique
+  organization           Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  aiEnabled              Boolean      @default(false)
+  inactivityMinutes      Int          @default(5)
+  mode                   String       @default("suggestion") // suggestion | automatic
+  businessHoursStart     String       @default("08:00")
+  businessHoursEnd       String       @default("18:00")
+  businessDays           Int[]        @default([1, 2, 3, 4, 5])
+  maximumAutomaticReplies Int         @default(3)
+  confidenceThreshold    Float        @default(0.7)
+  escalationKeywords     String[]     @default([])
+  excludedTopics         String[]     @default([])
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+}
+
+enum AiExecutionResult {
+  suggested
+  sent
+  skipped_safety
+  skipped_rules
+  failed
+}
+
+model AiExecution {
+  id             String            @id @default(cuid())
+  publicId       String            @unique @default(uuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  provider       String
+  model          String
+  promptVersion  String
+  input          Json
+  output         Json?
+  latencyMs      Int?
+  tokensUsed     Int?
+  result         AiExecutionResult
+  safetyFlags    String[]          @default([])
+  createdAt      DateTime          @default(now())
+
+  @@index([organizationId])
+  @@index([conversationId])
+}
+
+// ---------------------------------------------------------------------------
+// Webhooks, idempotencia y auditoría
+// ---------------------------------------------------------------------------
+
+enum WebhookEventStatus {
+  received
+  processing
+  processed
+  failed
+  dead_letter
+}
+
+model WebhookEvent {
+  id             String              @id @default(cuid())
+  publicId       String              @unique @default(uuid())
+  organizationId String?
+  organization   Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       ChannelProviderType
+  idempotencyKey String              @unique
+  payload        Json
+  signatureValid Boolean             @default(true)
+  status         WebhookEventStatus  @default(received)
+  attempts       Int                 @default(0)
+  lastError      String?
+  receivedAt     DateTime            @default(now())
+  processedAt    DateTime?
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model IdempotencyKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  key            String
+  scope          String // p.ej. "outbound-message", "webhook"
+  responseSnapshot Json?
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
+
+  @@unique([organizationId, scope, key])
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+  login
+  logout
+  assign
+  send_message
+  status_change
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  publicId       String       @unique @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorUserId    String?
+  actorUser      User?        @relation(fields: [actorUserId], references: [id])
+  action         AuditAction
+  entityType     String
+  entityId       String?
+  metadata       Json         @default("{}")
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
+
+// ---------------------------------------------------------------------------
+// Notificaciones
+// ---------------------------------------------------------------------------
+
+enum NotificationType {
+  conversation_assigned
+  ai_suggestion
+  conversation_requires_human
+  mention
+  system
+}
+
+model Notification {
+  id             String           @id @default(cuid())
+  publicId       String           @unique @default(uuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  type           NotificationType
+  title          String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId, userId, readAt])
+}
