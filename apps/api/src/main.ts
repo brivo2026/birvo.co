@@ -74,7 +74,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  // eslint-disable-next-line no-console
   console.error('Error fatal al iniciar BIRVO API:', error);
   process.exit(1);
 });

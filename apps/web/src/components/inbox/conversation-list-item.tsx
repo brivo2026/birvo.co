@@ -14,6 +14,17 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'neutral' | 'danger
   requires_human: 'danger',
 };
 
+const LAST_MESSAGE_TYPE_LABEL: Record<string, string> = {
+  audio: '🎤 Nota de voz',
+  image: '📷 Imagen',
+  file: '📎 Archivo',
+};
+
+function lastMessagePreview(lastMessage: ConversationSummary['lastMessage']): string {
+  if (!lastMessage) return 'Sin mensajes todavía';
+  return lastMessage.content || LAST_MESSAGE_TYPE_LABEL[lastMessage.type] || 'Sin mensajes todavía';
+}
+
 export function ConversationListItem({ conversation, active }: { conversation: ConversationSummary; active: boolean }) {
   return (
     <Link
@@ -30,8 +41,8 @@ export function ConversationListItem({ conversation, active }: { conversation: C
           <span className="shrink-0 text-[11px] text-slate-400">{formatRelativeTime(conversation.lastMessageAt)}</span>
         </div>
         <p className="mt-0.5 truncate text-xs text-slate-500">
-          {conversation.lastMessage?.direction === 'outbound' ? 'Tú: ' : ''}
-          {conversation.lastMessage?.content || 'Sin mensajes todavía'}
+          {conversation.lastMessage && conversation.lastMessage.direction === 'outbound' ? 'Tú: ' : ''}
+          {lastMessagePreview(conversation.lastMessage)}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-1">
           <Badge variant={STATUS_VARIANT[conversation.status] ?? 'neutral'} className="capitalize">

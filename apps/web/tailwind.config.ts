@@ -1,5 +1,5 @@
 import type { Config } from 'tailwindcss';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const birvoPreset = require('@birvo/ui/tailwind-preset');
 
 const config: Config = {

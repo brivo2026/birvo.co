@@ -1,3 +1,3 @@
-import { getPrismaClient } from '@birvo/database';
+import { getPrismaClient, type PrismaClient } from '@birvo/database';
 
-export const prisma = getPrismaClient();
+export const prisma: PrismaClient = getPrismaClient();

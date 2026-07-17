@@ -1,8 +1,13 @@
+const tseslint = require('@typescript-eslint/eslint-plugin');
 const base = require('./base.js');
 
 module.exports = [
   ...base,
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/interface-name-prefix': 'off',

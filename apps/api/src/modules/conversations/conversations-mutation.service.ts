@@ -6,7 +6,7 @@ import type {
   UpdateConversationPriorityDto,
   UpdateConversationStatusDto,
 } from '@birvo/contracts';
-import { SocketEvent, conversationRoom, organizationRoom } from '@birvo/contracts';
+import { SocketEvent, organizationRoom } from '@birvo/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimePublisherService } from '../../realtime/realtime-publisher.service';

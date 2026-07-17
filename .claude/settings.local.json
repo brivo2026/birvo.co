@@ -93,7 +93,14 @@
       "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 6379 | Select-Object TcpTestSucceeded\")",
       "Bash(PGPASSWORD=birvo_dev_password powershell -NoProfile -Command '$env:PGPASSWORD='\\\\''birvo_dev_password'\\\\''; & '\\\\''psql'\\\\'' -U birvo -d birvo -h localhost -c '\\\\''select count\\(*\\) from \"Organization\"; select count\\(*\\) from \"Contact\"; select email from \"User\";'\\\\''')",
       "Bash(pnpm test *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 3000 | Select-Object TcpTestSucceeded; Test-NetConnection -ComputerName localhost -Port 4000 | Select-Object TcpTestSucceeded\")",
+      "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 4000 | Select-Object TcpTestSucceeded\")",
+      "Bash(pnpm --filter @birvo/database build)",
+      "Bash(powershell -NoProfile -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime\")",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(6244,16304,9596,12084,18424,7292,2900,1696,14492,10424,3544\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(node -e \"console.log\\(require.resolve\\('@typescript-eslint/eslint-plugin'\\)\\)\")",
+      "Bash(node -e \"console.log\\(require.resolve\\('@typescript-eslint/eslint-plugin', {paths:['D:/birvo/packages/eslint-config']}\\)\\)\")"
     ]
   }
 }

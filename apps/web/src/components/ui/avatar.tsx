@@ -2,8 +2,8 @@ import { cn, initials } from '@/lib/utils';
 
 export function Avatar({ name, src, className, size = 36 }: { name: string; src?: string | null; className?: string; size?: number }) {
   if (src) {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={name}
