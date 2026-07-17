@@ -2,7 +2,7 @@ services:
   - type: web
     name: birvo-api
     runtime: node
-    plan: starter
+    plan: free
     region: oregon
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo run build --filter=@birvo/api...
     startCommand: pnpm --filter @birvo/api start
@@ -70,10 +70,10 @@ services:
         sync: false
       - key: MESSENGER_PAGE_TOKEN
         sync: false
-    disk:
-      name: birvo-api-storage
-      mountPath: /opt/render/project/src/apps/api/storage
-      sizeGB: 1
+    # Sin disco persistente (no disponible en el plan free): los adjuntos
+    # guardados en disco local se pierden en cada reinicio/redeploy. Para
+    # persistirlos de verdad, subir birvo-api a un plan pago y volver a
+    # agregar un bloque `disk:`, o cambiar STORAGE_DRIVER a "s3".
 
   - type: worker
     name: birvo-worker
@@ -114,7 +114,7 @@ services:
   - type: web
     name: birvo-web
     runtime: node
-    plan: starter
+    plan: free
     region: oregon
     buildCommand: corepack enable && pnpm install --frozen-lockfile && NEXT_PUBLIC_API_URL=https://birvo-api.onrender.com pnpm turbo run build --filter=@birvo/web...
     startCommand: pnpm --filter @birvo/web start
@@ -126,13 +126,13 @@ services:
 
   - type: keyvalue
     name: birvo-redis
-    plan: starter
+    plan: free
     region: oregon
     ipAllowList: []
 
 databases:
   - name: birvo-postgres
-    plan: basic-256mb
+    plan: free
     databaseName: birvo
     user: birvo
     region: oregon
