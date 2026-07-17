@@ -38,7 +38,10 @@ services:
           name: birvo-postgres
           property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromService:
+          name: birvo-redis
+          type: keyvalue
+          property: connectionString
       - key: STORAGE_DRIVER
         value: local
       - key: STORAGE_LOCAL_PATH
@@ -93,7 +96,10 @@ services:
           name: birvo-postgres
           property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromService:
+          name: birvo-redis
+          type: keyvalue
+          property: connectionString
       - key: STORAGE_DRIVER
         value: local
       - key: AI_PROVIDER
@@ -118,9 +124,15 @@ services:
       - key: NEXT_PUBLIC_API_URL
         value: https://birvo-api.onrender.com
 
+  - type: keyvalue
+    name: birvo-redis
+    plan: starter
+    region: oregon
+    ipAllowList: []
+
 databases:
   - name: birvo-postgres
-    plan: starter
+    plan: basic-256mb
     databaseName: birvo
     user: birvo
     region: oregon
