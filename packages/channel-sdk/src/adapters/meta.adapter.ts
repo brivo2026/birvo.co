@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { ChannelProvider, MessageType } from '@birvo/contracts';
+import { MessageType } from '@birvo/contracts';
 import type {
   ChannelCredentials,
   ChannelProviderAdapter,

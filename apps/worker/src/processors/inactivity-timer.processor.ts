@@ -25,8 +25,8 @@ function isWithinBusinessHours(config: { businessHoursStart: string; businessHou
 
   if (!config.businessDays.includes(dayNumber)) return false;
 
-  const [startH, startM] = config.businessHoursStart.split(':').map(Number);
-  const [endH, endM] = config.businessHoursEnd.split(':').map(Number);
+  const [startH = 0, startM = 0] = config.businessHoursStart.split(':').map(Number);
+  const [endH = 0, endM = 0] = config.businessHoursEnd.split(':').map(Number);
   const nowMinutes = hour * 60 + minute;
   return nowMinutes >= startH * 60 + startM && nowMinutes <= endH * 60 + endM;
 }

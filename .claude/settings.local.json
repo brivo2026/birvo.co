@@ -75,7 +75,23 @@
       "Bash(git commit *)",
       "Bash(git config *)",
       "Bash(git count-objects *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(powershell -NoProfile -Command \"Get-Process 'Docker Desktop' -ErrorAction SilentlyContinue | Select-Object -First 1 | Out-Null; if \\(-not \\\\$?\\) { Write-Output 'not running' }; Test-Path 'C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe'\")",
+      "Bash(powershell -NoProfile -Command \"Start-Process 'C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe'\")",
+      "Bash(pnpm typecheck *)",
+      "Bash(powershell -NoProfile -Command 'Get-Process | Where-Object {$_.ProcessName -like '\\\\''*Docker*'\\\\''} | Select-Object ProcessName,Id')",
+      "Bash(powershell -NoProfile -Command 'Start-Process '\\\\''C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe'\\\\''; Start-Sleep -Seconds 3; Get-Process | Where-Object {$_.ProcessName -like '\\\\''*Docker*'\\\\'' -or $_.ProcessName -like '\\\\''*com.docker*'\\\\''} | Select-Object ProcessName,Id')",
+      "Bash(pnpm lint *)",
+      "Bash(break)",
+      "Bash(powershell -NoProfile -Command 'Get-Process | Where-Object {$_.ProcessName -like '\\\\''*docker*'\\\\''} | Select-Object ProcessName,Id,StartTime')",
+      "Bash(powershell -NoProfile -Command \"wsl --status\")",
+      "Bash(powershell -NoProfile -Command \"wsl -l -v\")",
+      "Bash(where.exe pg_ctl)",
+      "Bash(powershell -NoProfile -Command 'Get-Service | Where-Object {$_.Name -like '\\\\''*postgres*'\\\\''} | Select-Object Name,Status')",
+      "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 5432 | Select-Object TcpTestSucceeded\")",
+      "Bash(powershell -NoProfile -Command \"Get-Process redis-server -ErrorAction SilentlyContinue | Select-Object Id,ProcessName\")",
+      "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 6379 | Select-Object TcpTestSucceeded\")",
+      "Bash(PGPASSWORD=birvo_dev_password powershell -NoProfile -Command '$env:PGPASSWORD='\\\\''birvo_dev_password'\\\\''; & '\\\\''psql'\\\\'' -U birvo -d birvo -h localhost -c '\\\\''select count\\(*\\) from \"Organization\"; select count\\(*\\) from \"Contact\"; select email from \"User\";'\\\\''')"
     ]
   }
 }

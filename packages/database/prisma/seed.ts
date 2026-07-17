@@ -200,6 +200,11 @@ async function main() {
   const agent = users.get('agent@birvo.local')!;
 
   for (const [index, c] of demoContacts.entries()) {
+    const existingIdentity = await prisma.contactIdentity.findUnique({
+      where: { channelAccountId_externalUserId: { channelAccountId: sandboxChannel.id, externalUserId: c.externalUserId } },
+    });
+    if (existingIdentity) continue;
+
     const contact = await prisma.contact.create({
       data: {
         organizationId: organization.id,

@@ -118,14 +118,14 @@ export class SandboxChannelAdapter implements ChannelProviderAdapter {
     };
   }
 
-  async sendTextMessage(input: SendTextMessageInput): Promise<SendMessageResult> {
+  async sendTextMessage(_input: SendTextMessageInput): Promise<SendMessageResult> {
     return {
       externalMessageId: `sandbox-out-${randomUUID()}`,
       status: 'sent',
     };
   }
 
-  async sendMediaMessage(input: SendMediaMessageInput): Promise<SendMessageResult> {
+  async sendMediaMessage(_input: SendMediaMessageInput): Promise<SendMessageResult> {
     return {
       externalMessageId: `sandbox-out-${randomUUID()}`,
       status: 'sent',
