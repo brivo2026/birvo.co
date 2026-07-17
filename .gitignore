@@ -17,3 +17,5 @@ test-results
 .pgdata
 .redisdata
 .miniodata
+.dev-tools
+dump.rdb

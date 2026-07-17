@@ -72,7 +72,10 @@
       "PowerShell(claude --version 2>$null)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git config *)",
+      "Bash(git count-objects *)",
+      "Bash(git rm *)"
     ]
   }
 }
