@@ -34,12 +34,24 @@ function isWithinBusinessHours(config: { businessHoursStart: string; businessHou
 export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeoutJob>): Promise<void> {
   const { conversationId, organizationId, triggeredByMessageId } = job.data;
 
+  const automationRun = await prisma.automationRun.findFirst({
+    where: { conversationId, status: 'scheduled' },
+    orderBy: { createdAt: 'desc' },
+  });
+  const markRun = (status: 'completed' | 'cancelled', result: Record<string, unknown>) =>
+    automationRun
+      ? prisma.automationRun
+          .update({ where: { id: automationRun.id }, data: { status, result: result as Prisma.InputJsonValue } })
+          .then(() => undefined)
+      : Promise.resolve();
+
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     include: { contact: true, organization: true },
   });
   if (!conversation || conversation.status === 'closed' || conversation.status === 'resolved') {
     logger.debug({ conversationId }, 'Conversación cerrada/resuelta, se omite evaluación de IA');
+    await markRun('cancelled', { reason: 'conversación cerrada o resuelta' });
     return;
   }
 
@@ -59,17 +71,20 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
     });
     if (humanReply) {
       logger.debug({ conversationId }, 'Un agente ya respondió; se cancela la evaluación de IA');
+      await markRun('cancelled', { reason: 'un agente ya respondió' });
       return;
     }
   }
 
   const aiConfig = await prisma.aiConfiguration.findUnique({ where: { organizationId } });
   if (!aiConfig || !aiConfig.aiEnabled || conversation.aiMode === 'off') {
+    await markRun('cancelled', { reason: 'IA deshabilitada para la organización o la conversación' });
     return;
   }
 
   if (!isWithinBusinessHours(aiConfig, conversation.organization.timezone)) {
     await recordExecution(conversation.id, organizationId, { input: { reason: 'fuera de horario laboral' } }, 'skipped_rules', []);
+    await markRun('completed', { result: 'skipped_rules', reason: 'fuera de horario laboral' });
     return;
   }
 
@@ -81,6 +96,7 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
       'skipped_rules',
       [],
     );
+    await markRun('completed', { result: 'skipped_rules', reason: 'máximo de respuestas automáticas alcanzado' });
     return;
   }
 
@@ -135,6 +151,7 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
       reply.safety.flags,
       reply,
     );
+    await markRun('completed', { result: 'skipped_safety', reason: reply.safety.reason ?? null });
     return;
   }
 
@@ -147,6 +164,7 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
       reply.safety.flags,
       reply,
     );
+    await markRun('completed', { result: 'suggested', text: reply.text });
 
     await publishRealtimeEvent(SocketEvent.AI_SUGGESTION_CREATED, conversationRoom(conversation.publicId), {
       conversationId: conversation.publicId,
@@ -199,6 +217,7 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
     reply.safety.flags,
     reply,
   );
+  await markRun('completed', { result: 'sent', text: reply.text });
 
   await publishRealtimeEvent(SocketEvent.MESSAGE_CREATED, conversationRoom(conversation.publicId), {
     id: aiMessage.publicId,

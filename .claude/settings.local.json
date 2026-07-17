@@ -100,7 +100,10 @@
       "Bash(powershell -NoProfile -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,StartTime\")",
       "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(6244,16304,9596,12084,18424,7292,2900,1696,14492,10424,3544\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
       "Bash(node -e \"console.log\\(require.resolve\\('@typescript-eslint/eslint-plugin'\\)\\)\")",
-      "Bash(node -e \"console.log\\(require.resolve\\('@typescript-eslint/eslint-plugin', {paths:['D:/birvo/packages/eslint-config']}\\)\\)\")"
+      "Bash(node -e \"console.log\\(require.resolve\\('@typescript-eslint/eslint-plugin', {paths:['D:/birvo/packages/eslint-config']}\\)\\)\")",
+      "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 6379 | Select-Object TcpTestSucceeded; Test-NetConnection -ComputerName localhost -Port 5432 | Select-Object TcpTestSucceeded\")",
+      "Bash(powershell -NoProfile -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime | Sort-Object StartTime\")",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(16204,20024,16236,10628,21944,21316,20544,14244,13516,21652,8768,19292\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
     ]
   }
 }

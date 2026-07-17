@@ -4,6 +4,7 @@ jest.mock('../lib/prisma', () => ({
     message: { findUnique: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn() },
     aiConfiguration: { findUnique: jest.fn() },
     aiExecution: { create: jest.fn() },
+    automationRun: { findFirst: jest.fn(), update: jest.fn() },
     notification: { create: jest.fn() },
   },
 }));

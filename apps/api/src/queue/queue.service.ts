@@ -10,6 +10,7 @@ import {
   type TranscribeAttachmentJob,
 } from '@birvo/contracts';
 import { RedisConnectionFactory } from './redis.provider';
+import { PrismaService } from '../database/prisma.service';
 
 const DEFAULT_JOB_OPTIONS = {
   attempts: 5,
@@ -29,7 +30,10 @@ export class QueueService implements OnModuleDestroy {
   private readonly automationTimersQueue: Queue<EvaluateInactivityTimeoutJob>;
   private readonly transcriptionsQueue: Queue<TranscribeAttachmentJob>;
 
-  constructor(redis: RedisConnectionFactory) {
+  constructor(
+    redis: RedisConnectionFactory,
+    private readonly prisma: PrismaService,
+  ) {
     const connection = redis.connection;
     this.webhooksQueue = new Queue(QueueName.WEBHOOKS, { connection });
     this.outboundMessagesQueue = new Queue(QueueName.OUTBOUND_MESSAGES, { connection });
@@ -74,6 +78,10 @@ export class QueueService implements OnModuleDestroy {
       const state = await existing.getState();
       if (state === 'delayed' || state === 'waiting') {
         await existing.remove();
+        await this.prisma.client.automationRun.updateMany({
+          where: { conversationId, status: 'scheduled' },
+          data: { status: 'cancelled', result: { reason: 'un agente respondió antes del temporizador' } },
+        });
       }
     }
   }
