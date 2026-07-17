@@ -103,7 +103,11 @@
       "Bash(node -e \"console.log\\(require.resolve\\('@typescript-eslint/eslint-plugin', {paths:['D:/birvo/packages/eslint-config']}\\)\\)\")",
       "Bash(powershell -NoProfile -Command \"Test-NetConnection -ComputerName localhost -Port 6379 | Select-Object TcpTestSucceeded; Test-NetConnection -ComputerName localhost -Port 5432 | Select-Object TcpTestSucceeded\")",
       "Bash(powershell -NoProfile -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime | Sort-Object StartTime\")",
-      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(16204,20024,16236,10628,21944,21316,20544,14244,13516,21652,8768,19292\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(16204,20024,16236,10628,21944,21316,20544,14244,13516,21652,8768,19292\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(powershell -NoProfile -Command \"\\(Test-NetConnection -ComputerName localhost -Port 4000\\).TcpTestSucceeded\")",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(22512,21212,17480,18488,12388,18936,21928,18668,11744,7276,18704\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
     ]
   }
 }

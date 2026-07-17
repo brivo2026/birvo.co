@@ -114,6 +114,19 @@ export class DevSandboxService {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Se crea el registro de automatización ANTES de encolar el job (que puede
+    // ejecutarse casi de inmediato con delay 0), para evitar una condición de
+    // carrera en la que el worker no encuentre ningún AutomationRun 'scheduled'.
+    await this.prisma.client.automationRun.create({
+      data: {
+        organizationId: user.organizationId,
+        conversationId: conversation.id,
+        status: 'scheduled',
+        scheduledFor: new Date(),
+        bullJobId: `inactivity-${conversation.id}`,
+      },
+    });
+
     await this.queue.scheduleInactivityTimeout(
       {
         conversationId: conversation.id,

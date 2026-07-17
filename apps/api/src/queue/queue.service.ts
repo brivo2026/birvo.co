@@ -64,6 +64,15 @@ export class QueueService implements OnModuleDestroy {
   async scheduleInactivityTimeout(job: EvaluateInactivityTimeoutJob, delayMs: number): Promise<void> {
     const jobId = this.inactivityJobId(job.conversationId);
     await this.cancelInactivityTimeout(job.conversationId);
+    // BullMQ reutiliza el jobId determinista: si el temporizador anterior ya
+    // terminó (completed/failed), cancelInactivityTimeout no lo elimina (solo
+    // actúa sobre delayed/waiting) y un `.add()` con el mismo jobId no
+    // encolaría un job nuevo. Se elimina explícitamente cualquier resto antes
+    // de programar el siguiente ciclo.
+    const stale = await this.automationTimersQueue.getJob(jobId);
+    if (stale) {
+      await stale.remove().catch(() => undefined);
+    }
     await this.automationTimersQueue.add(JobName.EVALUATE_INACTIVITY_TIMEOUT, job, {
       ...DEFAULT_JOB_OPTIONS,
       delay: delayMs,
