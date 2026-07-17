@@ -2,7 +2,6 @@ import type { Job } from 'bullmq';
 import { Prisma } from '@birvo/database';
 import {
   SocketEvent,
-  conversationRoom,
   organizationRoom,
   type NormalizedInboundMessage,
   type NormalizedStatusUpdate,
@@ -155,8 +154,9 @@ async function processInboundMessage(
     throw error;
   }
 
+  let createdAttachment: Awaited<ReturnType<typeof prisma.attachment.create>> | null = null;
   if (MESSAGE_TYPES_WITH_ATTACHMENT.has(normalized.messageType) && normalized.mediaUrl) {
-    const attachment = await prisma.attachment.create({
+    createdAttachment = await prisma.attachment.create({
       data: {
         organizationId,
         messageId: createdMessage.id,
@@ -171,7 +171,7 @@ async function processInboundMessage(
     });
 
     if (normalized.messageType === 'audio') {
-      await enqueueTranscription({ attachmentId: attachment.id, organizationId });
+      await enqueueTranscription({ attachmentId: createdAttachment.id, organizationId });
     }
   }
 
@@ -180,14 +180,35 @@ async function processInboundMessage(
     data: { lastMessageAt: new Date(), unreadCount: { increment: 1 } },
   });
 
-  await publishRealtimeEvent(SocketEvent.MESSAGE_CREATED, conversationRoom(conversation.publicId), {
-    id: createdMessage.publicId,
-    direction: 'inbound',
-    senderType: 'contact',
-    messageType: createdMessage.messageType,
-    content: createdMessage.content,
-    status: createdMessage.status,
-    createdAt: createdMessage.createdAt,
+  await publishRealtimeEvent(SocketEvent.MESSAGE_CREATED, organizationRoom(organizationId), {
+    conversationId: conversation.publicId,
+    message: {
+      id: createdMessage.publicId,
+      direction: 'inbound',
+      senderType: 'contact',
+      senderName: null,
+      messageType: createdMessage.messageType,
+      content: createdMessage.content,
+      status: createdMessage.status,
+      sentAt: createdMessage.sentAt,
+      deliveredAt: createdMessage.deliveredAt,
+      readAt: createdMessage.readAt,
+      createdAt: createdMessage.createdAt,
+      attachments: createdAttachment
+        ? [
+            {
+              id: createdAttachment.publicId,
+              type: createdAttachment.type,
+              filename: createdAttachment.filename,
+              mimeType: createdAttachment.mimeType,
+              size: createdAttachment.size,
+              duration: createdAttachment.duration,
+              transcriptionStatus: createdAttachment.transcriptionStatus,
+              transcriptionText: createdAttachment.transcriptionText,
+            },
+          ]
+        : [],
+    },
   });
 
   await publishRealtimeEvent(
@@ -237,7 +258,8 @@ async function processStatusUpdate(update: NormalizedStatusUpdate): Promise<void
 
   await prisma.message.update({ where: { id: message.id }, data });
 
-  await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, conversationRoom(message.conversation.publicId), {
+  await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, organizationRoom(message.organizationId), {
+    conversationId: message.conversation.publicId,
     messageId: message.publicId,
     status: update.status,
   });

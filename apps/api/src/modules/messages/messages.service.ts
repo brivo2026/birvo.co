@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { ListMessagesQuery, SendMessageDto, SessionUser } from '@birvo/contracts';
-import { SocketEvent, conversationRoom, organizationRoom } from '@birvo/contracts';
+import { SocketEvent, organizationRoom } from '@birvo/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimePublisherService } from '../../realtime/realtime-publisher.service';
@@ -84,7 +84,6 @@ export class MessagesService {
       metadata: { conversationId: conversation.publicId },
     });
 
-    await this.realtime.publish(SocketEvent.MESSAGE_CREATED, conversationRoom(conversation.publicId), this.toDto(message));
     await this.realtime.publish(SocketEvent.MESSAGE_CREATED, organizationRoom(user.organizationId), {
       conversationId: conversation.publicId,
       message: this.toDto(message),

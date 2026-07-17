@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq';
-import { SocketEvent, conversationRoom, type SendOutboundMessageJob, type SimulateDeliveryProgressionJob } from '@birvo/contracts';
+import { SocketEvent, organizationRoom, type SendOutboundMessageJob, type SimulateDeliveryProgressionJob } from '@birvo/contracts';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
 import { channelRegistry } from '../lib/channel-registry';
@@ -34,7 +34,7 @@ export async function sendOutboundMessage(job: Job<SendOutboundMessageJob>): Pro
 
   const identity = message.conversation.contact.identities.find((i) => i.channelAccountId === channelAccount.id);
   if (!identity) {
-    await markFailed(message.id, message.conversation.publicId, 'No se encontró la identidad del contacto en este canal.');
+    await markFailed(message.id, message.organizationId, message.conversation.publicId, 'No se encontró la identidad del contacto en este canal.');
     return;
   }
 
@@ -47,7 +47,7 @@ export async function sendOutboundMessage(job: Job<SendOutboundMessageJob>): Pro
     });
 
     if (result.status === 'failed') {
-      await markFailed(message.id, message.conversation.publicId, result.errorReason ?? 'Envío rechazado por el proveedor.');
+      await markFailed(message.id, message.organizationId, message.conversation.publicId, result.errorReason ?? 'Envío rechazado por el proveedor.');
       return;
     }
 
@@ -57,7 +57,8 @@ export async function sendOutboundMessage(job: Job<SendOutboundMessageJob>): Pro
       data: { status: 'sent', externalMessageId: result.externalMessageId, sentAt },
     });
 
-    await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, conversationRoom(message.conversation.publicId), {
+    await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, organizationRoom(message.organizationId), {
+      conversationId: message.conversation.publicId,
       messageId: message.publicId,
       status: 'sent',
     });
@@ -87,7 +88,7 @@ export async function sendOutboundMessage(job: Job<SendOutboundMessageJob>): Pro
       void now;
     }
   } catch (error) {
-    await markFailed(message.id, message.conversation.publicId, (error as Error).message);
+    await markFailed(message.id, message.organizationId, message.conversation.publicId, (error as Error).message);
     throw error; // Permite que BullMQ reintente con backoff exponencial.
   }
 }
@@ -105,15 +106,17 @@ export async function simulateDeliveryProgression(job: Job<SimulateDeliveryProgr
     data: job.data.status === 'delivered' ? { status: 'delivered', deliveredAt: now } : { status: 'read', readAt: now },
   });
 
-  await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, conversationRoom(message.conversation.publicId), {
+  await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, organizationRoom(message.organizationId), {
+    conversationId: message.conversation.publicId,
     messageId: message.publicId,
     status: job.data.status,
   });
 }
 
-async function markFailed(messageId: string, conversationPublicId: string, reason: string): Promise<void> {
+async function markFailed(messageId: string, organizationId: string, conversationPublicId: string, reason: string): Promise<void> {
   await prisma.message.update({ where: { id: messageId }, data: { status: 'failed', failureReason: reason } });
-  await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, conversationRoom(conversationPublicId), {
+  await publishRealtimeEvent(SocketEvent.MESSAGE_STATUS_UPDATED, organizationRoom(organizationId), {
+    conversationId: conversationPublicId,
     messageId,
     status: 'failed',
     reason,

@@ -5,14 +5,7 @@ import { api } from '@/lib/api-client';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { ConversationSummary } from '@/types/api';
-
-const STATUS_OPTIONS = [
-  { value: 'open', label: 'Abierta' },
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'resolved', label: 'Resuelta' },
-  { value: 'closed', label: 'Cerrada' },
-  { value: 'requires_human', label: 'Requiere atención' },
-];
+import { CONVERSATION_STATUS_OPTIONS } from '@/lib/conversation-status';
 
 export function ConversationHeader({ conversation }: { conversation: ConversationSummary }) {
   const queryClient = useQueryClient();
@@ -46,7 +39,7 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
           value={conversation.status}
           onChange={(e) => statusMutation.mutate(e.target.value)}
         >
-          {STATUS_OPTIONS.map((opt) => (
+          {CONVERSATION_STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>

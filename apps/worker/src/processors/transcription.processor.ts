@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq';
-import { SocketEvent, conversationRoom, type TranscribeAttachmentJob } from '@birvo/contracts';
+import { SocketEvent, organizationRoom, type TranscribeAttachmentJob } from '@birvo/contracts';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
 import { aiProvider } from '../lib/ai-provider';
@@ -48,15 +48,26 @@ export async function transcribeAttachment(job: Job<TranscribeAttachmentJob>): P
 
     await publishRealtimeEvent(
       SocketEvent.MESSAGE_TRANSCRIPTION_UPDATED,
-      conversationRoom(attachment.message.conversation.publicId),
-      { attachmentId: attachment.publicId, messageId: attachment.message.publicId, status: 'completed', text: result.text },
+      organizationRoom(attachment.message.organizationId),
+      {
+        conversationId: attachment.message.conversation.publicId,
+        attachmentId: attachment.publicId,
+        messageId: attachment.message.publicId,
+        status: 'completed',
+        text: result.text,
+      },
     );
   } catch (error) {
     await prisma.attachment.update({ where: { id: attachment.id }, data: { transcriptionStatus: 'failed' } });
     await publishRealtimeEvent(
       SocketEvent.MESSAGE_TRANSCRIPTION_UPDATED,
-      conversationRoom(attachment.message.conversation.publicId),
-      { attachmentId: attachment.publicId, messageId: attachment.message.publicId, status: 'failed' },
+      organizationRoom(attachment.message.organizationId),
+      {
+        conversationId: attachment.message.conversation.publicId,
+        attachmentId: attachment.publicId,
+        messageId: attachment.message.publicId,
+        status: 'failed',
+      },
     );
     throw error;
   }

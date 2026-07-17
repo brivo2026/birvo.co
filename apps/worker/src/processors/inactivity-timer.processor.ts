@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq';
 import { Prisma } from '@birvo/database';
-import { SocketEvent, conversationRoom, organizationRoom, type EvaluateInactivityTimeoutJob } from '@birvo/contracts';
+import { SocketEvent, organizationRoom, type EvaluateInactivityTimeoutJob } from '@birvo/contracts';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
 import { aiProvider } from '../lib/ai-provider';
@@ -166,7 +166,7 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
     );
     await markRun('completed', { result: 'suggested', text: reply.text });
 
-    await publishRealtimeEvent(SocketEvent.AI_SUGGESTION_CREATED, conversationRoom(conversation.publicId), {
+    await publishRealtimeEvent(SocketEvent.AI_SUGGESTION_CREATED, organizationRoom(organizationId), {
       conversationId: conversation.publicId,
       suggestion: reply.text,
       confidence: reply.confidence,
@@ -219,13 +219,22 @@ export async function evaluateInactivityTimeout(job: Job<EvaluateInactivityTimeo
   );
   await markRun('completed', { result: 'sent', text: reply.text });
 
-  await publishRealtimeEvent(SocketEvent.MESSAGE_CREATED, conversationRoom(conversation.publicId), {
-    id: aiMessage.publicId,
-    direction: 'outbound',
-    senderType: 'ai',
-    content: aiMessage.content,
-    status: 'pending',
-    createdAt: aiMessage.createdAt,
+  await publishRealtimeEvent(SocketEvent.MESSAGE_CREATED, organizationRoom(organizationId), {
+    conversationId: conversation.publicId,
+    message: {
+      id: aiMessage.publicId,
+      direction: 'outbound',
+      senderType: 'ai',
+      senderName: null,
+      messageType: 'text',
+      content: aiMessage.content,
+      status: 'pending',
+      sentAt: null,
+      deliveredAt: null,
+      readAt: null,
+      createdAt: aiMessage.createdAt,
+      attachments: [],
+    },
   });
 
   await enqueueOutboundMessage({ messageId: aiMessage.id, organizationId });

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { SessionUser } from '@birvo/contracts';
-import { SocketEvent, conversationRoom } from '@birvo/contracts';
+import { SocketEvent, organizationRoom } from '@birvo/contracts';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RealtimePublisherService } from '../../realtime/realtime-publisher.service';
@@ -45,7 +45,7 @@ export class ConversationNotesService {
       entityId: note.id,
     });
 
-    await this.realtime.publish(SocketEvent.CONVERSATION_UPDATED, conversationRoom(conversation.publicId), {
+    await this.realtime.publish(SocketEvent.CONVERSATION_UPDATED, organizationRoom(user.organizationId), {
       conversationId: conversation.publicId,
       newNote: { id: note.publicId, body: note.body, author: note.authorUser.name },
     });

@@ -113,7 +113,16 @@
       "Bash(curl -s http://localhost:3000/inbox)",
       "Bash(curl -s http://localhost:3000/login)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/inbox)",
-      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(13432,16232,3436,22124,14124,14580,2276,20136,8904,5968,11904,8248\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(13432,16232,3436,22124,14124,14580,2276,20136,8904,5968,11904,8248\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(npx playwright *)",
+      "Bash(powershell -NoProfile -Command \"\\(Test-NetConnection -ComputerName localhost -Port 3000\\).TcpTestSucceeded; \\(Test-NetConnection -ComputerName localhost -Port 4000\\).TcpTestSucceeded\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/register)",
+      "Bash(curl -s -o /dev/null -w \"inbox: %{http_code}\\\\n\" http://localhost:3000/inbox)",
+      "Bash(curl -s -o /dev/null -w \"root: %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"dashboard: %{http_code}\\\\n\" http://localhost:3000/dashboard)",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(18848,9584,8532,6592,9600,9236,19208,13484,10220,8852,1524,15820,9136\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')",
+      "Bash(powershell -NoProfile -Command 'foreach \\($p in @\\(8480,9088,5008,9184,8544,21732,21000,880,18348,18992,14612,14584\\)\\) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,StartTime')"
     ]
   }
 }

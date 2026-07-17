@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FullPageSpinner } from '@/components/ui/spinner';
 import { formatRelativeTime } from '@/lib/utils';
+import { CONVERSATION_STATUS_LABELS } from '@/lib/conversation-status';
 import type { ContactDetail } from '@/types/api';
 
 export default function ContactDetailPage() {
@@ -60,7 +61,7 @@ export default function ContactDetailPage() {
                 href={`/inbox/${c.id}`}
                 className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3 hover:bg-slate-50"
               >
-                <span className="text-sm capitalize text-slate-700">{c.status.replace('_', ' ')}</span>
+                <span className="text-sm text-slate-700">{CONVERSATION_STATUS_LABELS[c.status] ?? c.status}</span>
                 <span className="text-xs text-slate-400">{formatRelativeTime(c.lastMessageAt)}</span>
               </Link>
             ))}

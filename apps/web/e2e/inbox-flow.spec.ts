@@ -12,7 +12,11 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
  */
 
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:4000';
-const AGENT_EMAIL = 'agent@birvo.local';
+// Se usa la cuenta owner (permiso conversations:view_all) porque el flujo crea
+// una conversación nueva sin asignar; la cuenta agent solo ve conversaciones
+// asignadas (conversations:view_assigned) y nunca vería la conversación de la
+// prueba.
+const AGENT_EMAIL = 'owner@birvo.local';
 const AGENT_PASSWORD = 'Birvo#Dev2026';
 
 async function loginViaApi(request: APIRequestContext) {

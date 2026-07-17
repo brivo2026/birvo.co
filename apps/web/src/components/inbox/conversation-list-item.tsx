@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatRelativeTime } from '@/lib/utils';
+import { CONVERSATION_STATUS_LABELS } from '@/lib/conversation-status';
 import type { ConversationSummary } from '@/types/api';
 
 const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'neutral' | 'danger' | 'default'> = {
@@ -45,8 +46,8 @@ export function ConversationListItem({ conversation, active }: { conversation: C
           {lastMessagePreview(conversation.lastMessage)}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-1">
-          <Badge variant={STATUS_VARIANT[conversation.status] ?? 'neutral'} className="capitalize">
-            {conversation.status.replace('_', ' ')}
+          <Badge variant={STATUS_VARIANT[conversation.status] ?? 'neutral'}>
+            {CONVERSATION_STATUS_LABELS[conversation.status] ?? conversation.status}
           </Badge>
           {conversation.tags.slice(0, 2).map((tag) => (
             <span
