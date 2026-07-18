@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo run build --filter=@birvo/api...
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo run build
     # preDeployCommand no está soportado en el plan free: la migración se
     # corre como parte del arranque en su lugar. `prisma migrate deploy` es
     # idempotente (solo aplica migraciones pendientes), así que es seguro
@@ -84,7 +84,7 @@ services:
     runtime: node
     plan: starter
     region: oregon
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo run build --filter=@birvo/worker...
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo run build
     startCommand: pnpm --filter @birvo/worker start
     envVars:
       - key: NODE_ENV
@@ -120,13 +120,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: >-
-      corepack enable && pnpm install --frozen-lockfile;
-      echo "--- DEBUG apps/web/node_modules/@birvo ---";
-      ls -la apps/web/node_modules/@birvo/ 2>&1 || echo "(no existe)";
-      echo "--- DEBUG packages/contracts/dist ---";
-      ls -la packages/contracts/dist 2>&1 || echo "(no existe)";
-      NEXT_PUBLIC_API_URL=https://birvo-api.onrender.com pnpm turbo run build --filter=@birvo/web...
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && NEXT_PUBLIC_API_URL=https://birvo-api.onrender.com pnpm turbo run build
     startCommand: pnpm --filter @birvo/web start
     envVars:
       - key: NODE_ENV
