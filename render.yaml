@@ -120,7 +120,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && NEXT_PUBLIC_API_URL=https://birvo-api.onrender.com pnpm turbo run build --filter=@birvo/web...
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && echo "--- DEBUG node_modules/@birvo ---" && ls -la node_modules/@birvo/ 2>&1 && echo "--- DEBUG apps/web/node_modules/@birvo ---" && (ls -la apps/web/node_modules/@birvo/ 2>&1 || echo "(no existe)") && echo "--- DEBUG packages/contracts/dist ---" && (ls -la packages/contracts/dist 2>&1 || echo "(no existe)") && NEXT_PUBLIC_API_URL=https://birvo-api.onrender.com pnpm turbo run build --filter=@birvo/web...
     startCommand: pnpm --filter @birvo/web start
     envVars:
       - key: NODE_ENV
