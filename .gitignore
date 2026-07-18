@@ -19,3 +19,4 @@ test-results
 .miniodata
 .dev-tools
 dump.rdb
+*.tsbuildinfo
